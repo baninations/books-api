@@ -2,113 +2,31 @@ import express from "express";
 import { PORT, mongoDBURL } from "./config.js";
 import mongoose from "mongoose";
 import { Book } from "./models/bookModel.js";
+import booksRoute from "./routes/booksRoute.js";
+import cors from "cors";
 
 const app = express();
 
 // Middleware for parsing request body
 app.use(express.json());
 
+// Middleware for handling CORS POLICY
+app.use(cors());
+
+// Allow custom origins
+app.use(
+  cors({
+    origin: "http://localhost:5555",
+    methods: ["POST", "GET", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+app.use("/books", booksRoute);
+
 app.get("/", (request, response) => {
-  //   console.log(request);
+  // console.log(request);
   return response.status(234).send("Welcome to this MERN project");
-});
-
-app.post("/books", async (request, response) => {
-  try {
-    if (
-      !request.body.title ||
-      !request.body.author ||
-      !request.body.publishYear
-    ) {
-      return response.status(400).send({
-        message: "Send all required fields: title, author, publishYear",
-      });
-    }
-    const newBook = {
-      title: request.body.title,
-      author: request.body.author,
-      publishYear: request.body.publishYear,
-    };
-
-    const book = await Book.create(newBook);
-
-    return response.status(201).send(book);
-  } catch (error) {
-    console.log(error);
-    response.status(500).send({ message: error.message });
-  }
-});
-
-app.get("/books", async (request, response) => {
-  try {
-    const books = await Book.find({});
-
-    return response.status(500).json({
-      count: books.length,
-      data: books,
-    });
-  } catch (error) {
-    console.log(error);
-    response.status(500).send({ message: error.message });
-  }
-});
-
-app.get("/books/:id", async (request, response) => {
-  try {
-    const { id } = request.params;
-
-    const book = await Book.findById(id);
-
-    return response.status(500).json({ book });
-  } catch (error) {
-    console.log(error);
-    response.status(500).send({ message: error.message });
-  }
-});
-
-// Route for update a book
-app.put("/books/:id", async (request, response) => {
-  try {
-    if (
-      !request.body.title ||
-      !request.body.author ||
-      !request.body.publishYear
-    ) {
-      return response.status(400).send({
-        message: "Send all required fields: title, author, publishYear",
-      });
-    }
-
-    const { id } = request.params;
-
-    const result = await Book.findByIdAndUpdate(id, request.body);
-
-    if (!result) {
-      return response.status(404).json({ message: "Book not found" });
-    }
-
-    return response.status(200).send({ message: "Book updated successfully" });
-  } catch (error) {
-    console.log(error);
-    response.status(500).send({ message: error.message });
-  }
-});
-
-// Delete book
-app.delete("/books/:id", async (request, response) => {
-  try {
-    const { id } = request.params;
-    const result = await Book.findByIdAndDelete(id);
-
-    if (!result) {
-      return response.status(404).send({ message: "Book was not found" });
-    }
-
-    return response.status(200).send({ message: "Book successfully deleted" });
-  } catch (error) {
-    console.log(error);
-    return response.status(500).send({ message: error.message });
-  }
 });
 
 mongoose
